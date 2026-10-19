@@ -2,27 +2,37 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<title>Bunku Bread | Order</title>
+<title>Bunku Bread | Order online</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
-<link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Pacifico&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet" />
 <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 <header class="top">
-  <div class="brand">
-    <img src="images/Bunkulogo.jpg" alt="Bunku logo" class="logo" />
-    <div><h1>Bunku Bread</h1><p>Freshly baked. Delivered with love.</p></div>
-  </div>
-  <nav class="tabs" aria-label="Menu sections">
-    <a href="#savory">Savory</a><a href="#sweet">Sweet</a><a href="#box">Box</a>
-  </nav>
+  <a class="brand" href="#top" aria-label="Bunku Bread home">
+    <img src="images/Bunkulogo.jpg" alt="" class="logo" /><span>Bunku</span>
+  </a>
+  <nav class="nav" aria-label="Main"><a href="#menu">Menu</a><a href="#contact">Contact</a></nav>
+  <button type="button" id="cartBtn" class="cartbtn" aria-label="Open your order">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 7h12l-1 13H7L6 7Z"/><path d="M9 7a3 3 0 0 1 6 0"/></svg>
+    <span id="cartCount" class="badge">0</span>
+  </button>
 </header>
 
-<div class="layout">
-  <main id="menu" class="menu"></main>
+<section class="hero" id="top">
+  <div class="hero-text">
+    <h1>Freshly baked.<br>Delivered with love.</h1>
+    <p>Cheese-filled Bunku bread with a Korean-Japanese twist, baked to order.</p>
+    <div class="hero-cta"><a class="btn" href="#menu">Order now</a><span class="hours">Delivery and pick up, 10:00 to 22:00</span></div>
+  </div>
+  <div class="hero-img"><img src="images/BUNKUOG.jpg" alt="OG Bunku" /></div>
+</section>
 
-  <div id="backdrop" class="backdrop"></div>
+<nav class="tabs" aria-label="Menu sections"><a href="#savory">Savory</a><a href="#sweet">Sweet</a><a href="#box">Box</a></nav>
+<main id="menu" class="menu"></main>
+
+<div id="backdrop" class="backdrop"></div>
   <aside id="order" class="order" aria-label="Your order">
     <div class="sheet-head">
       <h2>Your order</h2>
@@ -70,7 +80,6 @@
       <p id="sent" class="sent hidden">Order sent. If WhatsApp did not open, <a id="waLink" href="#" target="_blank" rel="noopener">tap here to open it</a>.</p>
     </form>
   </aside>
-</div>
 
 <button type="button" id="bar" class="bar hidden" aria-label="View your order">
   <span id="barCount">0 items</span><span>View order</span><strong id="barTotal">0 AED</strong>
@@ -78,11 +87,12 @@
 
 <div id="lightbox" class="lightbox hidden"><img id="lightboxImg" src="" alt="" /><button type="button" id="lightboxClose" aria-label="Close image">&times;</button></div>
 
-<footer class="footer">
+<footer class="footer" id="contact">
+  <p>Follow us or message us to order</p><div class="icons">
   <a href="https://www.instagram.com/bunku.uae/" target="_blank" rel="noopener" aria-label="Instagram"><img src="images/instagram.png" alt="Instagram" /></a>
   <a href="https://api.whatsapp.com/send?phone=971544588113" target="_blank" rel="noopener" aria-label="WhatsApp"><img src="images/whatsapp.png" alt="WhatsApp" /></a>
   <a href="https://www.tiktok.com/@bunku.uae" target="_blank" rel="noopener" aria-label="TikTok"><img src="images/tiktok.png" alt="TikTok" /></a>
-</footer>
+</div></footer>
 <script src="script.js"></script>
 </body>
 </html>
