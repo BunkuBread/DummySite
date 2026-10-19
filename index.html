@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Bunku Bread | Order</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<header class="top">
+  <div class="brand">
+    <img src="images/Bunkulogo.jpg" alt="Bunku logo" class="logo" />
+    <div><h1>Bunku Bread</h1><p>Freshly baked. Delivered with love.</p></div>
+  </div>
+  <nav class="tabs" aria-label="Menu sections">
+    <a href="#savory">Savory</a><a href="#sweet">Sweet</a><a href="#box">Box</a>
+  </nav>
+</header>
+
+<div class="layout">
+  <main id="menu" class="menu"></main>
+
+  <div id="backdrop" class="backdrop"></div>
+  <aside id="order" class="order" aria-label="Your order">
+    <div class="sheet-head">
+      <h2>Your order</h2>
+      <button type="button" id="closeSheet" class="close" aria-label="Close order">&times;</button>
+    </div>
+    <form id="orderForm" novalidate autocomplete="off">
+      <ul id="lines" class="lines"></ul>
+
+      <div class="seg" role="radiogroup" aria-label="Order type">
+        <label><input type="radio" name="order_type" value="delivery" checked /><span>Delivery</span></label>
+        <label><input type="radio" name="order_type" value="pickup" /><span>Pick up</span></label>
+      </div>
+
+      <section id="deliveryFields" class="fields">
+        <label>Name<input id="deliveryName" type="text" autocomplete="name" /><small class="err" data-for="deliveryName"></small></label>
+        <label>Phone number<input id="deliveryPhone" type="tel" inputmode="numeric" autocomplete="tel" /><small class="err" data-for="deliveryPhone"></small></label>
+        <label>City
+          <select id="deliveryCity">
+            <option value="">Select city</option>
+            <option>Abu Dhabi</option><option>Dubai</option><option>Sharjah</option><option>Ajman</option>
+            <option>Umm Al Quwain</option><option>Ras Al Khaimah</option><option>Fujairah</option><option>Al Ain</option>
+          </select><small class="err" data-for="deliveryCity"></small>
+        </label>
+        <label>Area<input id="deliveryArea" type="text" /><small class="err" data-for="deliveryArea"></small></label>
+        <div class="two">
+          <label>Date<input id="deliveryDate" type="date" /><small class="err" data-for="deliveryDate"></small></label>
+          <label>Time<input id="deliveryTime" type="time" min="10:00" max="22:00" /><small class="err" data-for="deliveryTime"></small></label>
+        </div>
+        <p id="timeNote" class="note hidden">Due to your region, time of delivery is unavailable</p>
+        <p id="feeNote" class="note"></p>
+      </section>
+
+      <section id="pickupFields" class="fields hidden">
+        <label>Name<input id="pickupName" type="text" autocomplete="name" /><small class="err" data-for="pickupName"></small></label>
+        <label>Phone number<input id="pickupPhone" type="tel" inputmode="numeric" autocomplete="tel" /><small class="err" data-for="pickupPhone"></small></label>
+        <label>Plate number<input id="pickupPlate" type="text" /><small class="err" data-for="pickupPlate"></small></label>
+        <div class="two">
+          <label>Date<input id="pickupDate" type="date" /><small class="err" data-for="pickupDate"></small></label>
+          <label>Time<input id="pickupTime" type="time" min="10:00" max="22:00" /><small class="err" data-for="pickupTime"></small></label>
+        </div>
+      </section>
+
+      <div class="total"><span>Total</span><strong id="total">0 AED</strong></div>
+      <button id="checkoutBtn" type="submit" class="primary">Send order on WhatsApp</button>
+      <p id="sent" class="sent hidden">Order sent. If WhatsApp did not open, <a id="waLink" href="#" target="_blank" rel="noopener">tap here to open it</a>.</p>
+    </form>
+  </aside>
+</div>
+
+<button type="button" id="bar" class="bar hidden" aria-label="View your order">
+  <span id="barCount">0 items</span><span>View order</span><strong id="barTotal">0 AED</strong>
+</button>
+
+<div id="lightbox" class="lightbox hidden"><img id="lightboxImg" src="" alt="" /><button type="button" id="lightboxClose" aria-label="Close image">&times;</button></div>
+
+<footer class="footer">
+  <a href="https://www.instagram.com/bunku.uae/" target="_blank" rel="noopener" aria-label="Instagram"><img src="images/instagram.png" alt="Instagram" /></a>
+  <a href="https://api.whatsapp.com/send?phone=971544588113" target="_blank" rel="noopener" aria-label="WhatsApp"><img src="images/whatsapp.png" alt="WhatsApp" /></a>
+  <a href="https://www.tiktok.com/@bunku.uae" target="_blank" rel="noopener" aria-label="TikTok"><img src="images/tiktok.png" alt="TikTok" /></a>
+</footer>
+<script src="script.js"></script>
+</body>
+</html>
