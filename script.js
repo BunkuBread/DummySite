@@ -1,235 +1,542 @@
 // ----------- TELEGRAM CONFIGURATIONS -----------
 const TELEGRAM_BOT_TOKEN = '8871844782:AAESEct5I23R4yyDVWOXivxJ7o808pJeneU';
 const TELEGRAM_CHAT_ID = '-1003350834763';
-const WHATSAPP_PHONE = '971544588113';
+// Cities that are allowed to select a delivery time
 const ALLOWED_TIME_CITIES = ["Dubai", "Sharjah", "Ajman", "Umm Al Quwain"];
-const FEE_CITIES = ["Fujairah", "Ras Al Khaimah", "Abu Dhabi", "Al Ain", "Umm Al Quwain"];
-const SAME_DAY_CITIES = ["Ajman", "Dubai", "Sharjah"];
-const MAX_QTY = 10;
 
-// keepalive lets the request finish even after the page navigates to WhatsApp
+// Telegram send function
 function sendTelegramOrder(message) {
-  try {
-    fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text: message }),
-      keepalive: true
-    }).then(r => { if (!r.ok) console.error("Telegram message failed", r.status); })
-      .catch(e => console.error("Telegram error", e));
-  } catch (e) { console.error("Telegram error", e); }
-}
-
-// ----------- MENU -----------
-const PRODUCTS = [
-  { n: "OG Bunku", p: 55, c: "savory", img: "BUNKUOG.jpg", d: "Five imported cheeses with a Korean-Japanese twist.", add: "Extra garlic sauce" },
-  { n: "Zaatar Bomb", p: 60, c: "savory", img: "ZAATAR.jpg", d: "A burst of eight Zataar blends with our Korean-Japanese cheeses mix", add: "Extra garlic sauce" },
-  { n: "Labneh Bliss", p: 60, c: "savory", img: "LABNEHBLISS.png", d: "Home made labneh with our mix of nuts and flavorful spices" },
-  { n: "Date Me", p: 65, c: "savory", img: "DateMe.png", d: "Five imported cheeses with a Korean-Japanese & Arabic twist, blended with sweet dates." },
-  { n: "Diabetes", p: 65, c: "sweet", img: "DIABETES.jpg", d: "Nutella, chocolate fusion & marshmallow topping.", add: "Extra chocolate sauce" },
-  { n: "Strawberry Haven", p: 60, c: "sweet", img: "STRAWBERRYHAVEN.jpg", d: "Home-made jam with our Korean- Japanese cheeses mix" },
-  { n: "Berry Blast", p: 60, c: "sweet", img: "BERRYBLAST.jpg", d: "Home-made Blackberry Jam with our Korean-Japanese cheeses mix" },
-  { n: "Honey Trap", p: 65, c: "sweet", img: "HoneyTrap.png", d: "Homemade cream cheese with cinnamon, finished with a rich honey drizzle." },
-  { n: "Signature Box", p: 145, c: "box", img: "SignatureBox.png", d: "Enjoy every Bunku flavour in our Signature Box." }
-];
-const SECTIONS = [["savory", "Savory"], ["sweet", "Sweet"], ["box", "Box"]];
-const ADDON_PRICE = 5;
-const cart = {};      // name -> qty
-const addons = {};    // name -> true
-const $ = id => document.getElementById(id);
-const esc = s => s.replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-const byName = n => PRODUCTS.find(p => p.n === n);
-
-function renderMenu() {
-  $('menu').innerHTML = SECTIONS.map(([id, title]) => `
-    <section id="${id}"><h2>${title}</h2><div class="grid">
-    ${PRODUCTS.filter(p => p.c === id).map(p => `
-      <article class="card" data-n="${esc(p.n)}">
-        <img class="thumb" src="images/${p.img}" alt="${esc(p.n)}" loading="lazy" />
-        <div class="info">
-          <h3>${esc(p.n)}</h3><p>${esc(p.d)}</p>
-          <div class="row"><span class="price">${p.p} AED</span><span class="ctl"></span></div>
-          ${p.add ? `<label class="addon hidden"><input type="checkbox" data-addon="${esc(p.n)}" /> ${p.add} (+${ADDON_PRICE} AED)</label>` : ""}
-        </div>
-      </article>`).join("")}
-    </div></section>`).join("");
-}
-
-// ----------- PRICING -----------
-const count = () => Object.values(cart).reduce((a, b) => a + b, 0);
-const orderType = () => document.querySelector('input[name="order_type"]:checked').value;
-const feeFor = city => FEE_CITIES.includes(city) ? 45 : 0;
-function addonList() { return PRODUCTS.filter(p => p.add && addons[p.n] && cart[p.n]); }
-function total() {
-  let t = Object.entries(cart).reduce((s, [n, q]) => s + q * byName(n).p, 0);
-  t += addonList().length * ADDON_PRICE;
-  if (orderType() === "delivery") t += feeFor($('deliveryCity').value);
-  return t;
-}
-
-// ----------- RENDER -----------
-const stepper = (n, q) => `<span class="step"><button type="button" data-act="dec" data-n="${esc(n)}" aria-label="Reduce ${esc(n)}">-</button><span>${q}</span><button type="button" data-act="inc" data-n="${esc(n)}" aria-label="Increase ${esc(n)}">+</button></span>`;
-
-function update() {
-  document.querySelectorAll('.card').forEach(card => {
-    const n = card.dataset.n, q = cart[n] || 0;
-    card.querySelector('.ctl').innerHTML = q
-      ? stepper(n, q)
-      : `<button type="button" class="add" data-act="inc" data-n="${esc(n)}">Add</button>`;
-    const a = card.querySelector('.addon');
-    if (a) a.classList.toggle('hidden', !q);
+  fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      chat_id: TELEGRAM_CHAT_ID,
+      text: message
+    })
+  }).then(response => {
+    if (!response.ok) {
+      console.error("Telegram message failed", response.status);
+    }
+  }).catch(e => {
+    console.error("Telegram error", e);
   });
+}
 
-  const lines = $('lines');
-  const entries = Object.entries(cart);
-  lines.innerHTML = entries.length ? "" : '<li class="empty">Your order is empty. Add something tasty.</li>';
-  entries.forEach(([n, q]) => {
-    lines.insertAdjacentHTML('beforeend', `<li><div class="nm">${esc(n)}<div class="sub">${q * byName(n).p} AED</div></div>${stepper(n, q)}</li>`);
-  });
-  addonList().forEach(p => lines.insertAdjacentHTML('beforeend', `<li><div class="nm">${p.add} (${esc(p.n)})</div><span>+${ADDON_PRICE} AED</span></li>`));
-  if (orderType() === "delivery") {
-    const city = $('deliveryCity').value, fee = feeFor(city);
-    $('feeNote').textContent = fee ? `Delivery charge: +${fee} AED` : (city ? "Delivery charge estimated on message" : "");
-    if (fee) lines.insertAdjacentHTML('beforeend', `<li><div class="nm">Delivery fee</div><span>+${fee} AED</span></li>`);
+// ----------- Rest of cart and checkout code -----------
+const cart = {};
+
+function getDeliveryFee(city) {
+  const chargeCities = [
+    "Fujairah",
+    "Ras Al Khaimah",
+    "Abu Dhabi",
+    "Al Ain",
+    "Umm Al Quwain"
+  ];
+  if (chargeCities.includes(city)) return 45;
+  return 0;
+}
+
+function updateCartSummary() {
+  const count = Object.values(cart).reduce((sum, item) => sum + item.qty, 0);
+  let total = Object.values(cart).reduce((sum, item) => sum + (item.qty * item.price), 0);
+  if (document.getElementById('extra_garlic_og')?.checked) total += 5;
+  if (document.getElementById('extra_garlic_zaatar')?.checked) total += 5;
+  if (document.getElementById('extra_choc_diabetes')?.checked) total += 5;
+  const orderType = document.querySelector('input[name="order_type"]:checked');
+  let deliveryFee = 0;
+  if (orderType && orderType.value === 'delivery') {
+    const city = document.getElementById('deliveryCity')?.value || "";
+    deliveryFee = getDeliveryFee(city);
+    total += deliveryFee;
   }
-
-  const c = count(), t = total();
-  $('total').textContent = `${t} AED`;
-  $('barCount').textContent = `${c} item${c !== 1 ? 's' : ''}`;
-  $('barTotal').textContent = `${t} AED`;
-  $('bar').classList.toggle('hidden', c === 0);
-  $('cartCount').textContent = c;
-  $('cartCount').classList.toggle('on', c > 0);
+  const summaryEl = document.getElementById('cartSummary');
+  summaryEl.innerHTML = `Cart: ${count} item${count !== 1 ? 's' : ''} <span id="cartTotal">${total} AED</span>`;
 }
 
-function setQty(n, q) {
-  q = Math.max(0, Math.min(MAX_QTY, q));
-  if (q) cart[n] = q; else { delete cart[n]; delete addons[n]; }
-  update();
-}
-
-function toggleFields() {
-  const del = orderType() === "delivery";
-  $('deliveryFields').classList.toggle('hidden', !del);
-  $('pickupFields').classList.toggle('hidden', del);
-  const timeOk = ALLOWED_TIME_CITIES.includes($('deliveryCity').value);
-  const t = $('deliveryTime');
-  t.disabled = !timeOk;
-  if (!timeOk) t.value = "";
-  $('timeNote').classList.toggle('hidden', timeOk || !$('deliveryCity').value);
-  update();
-}
-
-// ----------- VALIDATION -----------
-const todayStr = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
-function validate() {
-  const errs = {};
-  const v = id => $(id).value.trim();
-  const dateCheck = (id, city, word) => {
-    if (!v(id)) errs[id] = "Select date";
-    else if (v(id) < todayStr()) errs[id] = "Date cannot be in past";
-    else if (v(id) === todayStr() && !SAME_DAY_CITIES.includes(city)) errs[id] = `Same day ${word} allowed only in Ajman, Dubai, Sharjah`;
-  };
-  if (orderType() === "delivery") {
-    const city = v('deliveryCity');
-    if (!v('deliveryName')) errs.deliveryName = "Name required";
-    if (!/^\d+$/.test(v('deliveryPhone'))) errs.deliveryPhone = "Valid phone required";
-    if (!city) errs.deliveryCity = "Select city";
-    if (!v('deliveryArea')) errs.deliveryArea = "Area required";
-    dateCheck('deliveryDate', city, "delivery");
-    if (ALLOWED_TIME_CITIES.includes(city) && !v('deliveryTime')) errs.deliveryTime = "Select time";
+function updateCartItem(name, qty, price) {
+  if (qty <= 0) {
+    delete cart[name];
+    qty = 0;
   } else {
-    if (!v('pickupName')) errs.pickupName = "Name required";
-    if (!/^\d+$/.test(v('pickupPhone'))) errs.pickupPhone = "Valid phone required";
-    if (!/^[a-zA-Z0-9]+$/.test(v('pickupPlate'))) errs.pickupPlate = "Valid plate number required";
-    dateCheck('pickupDate', "Dubai", "pickup");
-    if (!v('pickupTime')) errs.pickupTime = "Select time";
+    cart[name] = { qty, price };
   }
-  document.querySelectorAll('.err').forEach(e => e.textContent = errs[e.dataset.for] || "");
-  const first = Object.keys(errs)[0];
-  if (first) $(first).focus();
-  return !first;
-}
-
-// ----------- MESSAGE -----------
-function buildMessage() {
-  const v = id => $(id).value.trim();
-  let m = "Hello! I placed an order:\n\n";
-  if (orderType() === "delivery") {
-    const city = $('deliveryCity').value;
-    const time = ALLOWED_TIME_CITIES.includes(city) ? $('deliveryTime').value : "Due to your region, time of delivery is unavailable";
-    const fee = feeFor(city) || "Estimated on message";
-    m += "Delivery Details:\n";
-    m += `Name: ${v('deliveryName')}\nPhone: ${v('deliveryPhone')}\nCity: ${city}\nDate: ${$('deliveryDate').value}\nTime: ${time}\nArea: ${v('deliveryArea')}\nDelivery Charge: ${fee} AED\n\n`;
-  } else {
-    m += "Pick Up Details:\n";
-    m += `Name: ${v('pickupName')}\nPhone: ${v('pickupPhone')}\nPlate Number: ${v('pickupPlate')}\nDate: ${$('pickupDate').value}\nTime: ${$('pickupTime').value}\n\n`;
+  const productInput = document.querySelector(`#qty_${name.toLowerCase().replace(/ /g, '_')}`);
+  if (productInput) {
+    productInput.value = qty;
+    // Swap "Add to cart" button for the stepper
+    const card = productInput.closest('.product-card');
+    if (card) card.classList.toggle('in-cart', qty > 0);
   }
-  m += "Orders:\n";
-  for (const [n, q] of Object.entries(cart)) m += `${n}: ${q} box(es)\n`;
-  addonList().forEach(p => { m += `${p.add} (${p.n}): Yes (+${ADDON_PRICE} AED)\n`; });
-  m += `\nTotal: ${total()} AED`;
-  return m;
-}
-
-// ----------- SUBMIT -----------
-function submitOrder(e) {
-  e.preventDefault();
-  if (count() < 1) { alert("Your order is empty. Please add at least one item."); return; }
-  if (!validate()) return;
-  const message = buildMessage();
-  const url = `https://api.whatsapp.com/send?phone=${WHATSAPP_PHONE}&text=${encodeURIComponent(message)}`;
-  $('checkoutBtn').disabled = true;
-  saveDetails();
-  sendTelegramOrder(message);
-  $('waLink').href = url;
-  $('sent').classList.remove('hidden');
-  // Same-tab navigation: mobile browsers block window.open() after alerts or async work.
-  window.location.href = url;
-  setTimeout(() => { $('checkoutBtn').disabled = false; }, 4000);
-}
-
-// remember returning customers' details so repeat orders take seconds
-const KEEP = ['deliveryName', 'deliveryPhone', 'deliveryCity', 'deliveryArea', 'pickupName', 'pickupPhone', 'pickupPlate'];
-function saveDetails() { try { KEEP.forEach(id => localStorage.setItem('bunku_' + id, $(id).value)); } catch (e) {} }
-function restoreDetails() { try { KEEP.forEach(id => { const v = localStorage.getItem('bunku_' + id); if (v) $(id).value = v; }); } catch (e) {} }
-
-// ----------- EVENTS -----------
-const sheet = open => { document.body.classList.toggle('sheet', open); if (open) update(); };
-
-document.addEventListener('DOMContentLoaded', () => {
-  renderMenu();
-  const today = todayStr();
-  $('deliveryDate').min = today; $('pickupDate').min = today;
-
-  document.addEventListener('click', e => {
-    const b = e.target.closest('[data-act]');
-    if (b) { const n = b.dataset.n; setQty(n, (cart[n] || 0) + (b.dataset.act === "inc" ? 1 : -1)); return; }
-    if (e.target.classList.contains('thumb')) {
-      $('lightboxImg').src = e.target.src; $('lightboxImg').alt = e.target.alt;
-      $('lightbox').classList.remove('hidden');
+  const cartPanelInputs = document.querySelectorAll(`#cartList input.qty-input`);
+  cartPanelInputs.forEach(input => {
+    if (input.getAttribute('aria-label') === `${name} quantity`) {
+      input.value = qty;
     }
   });
-  document.addEventListener('change', e => {
-    if (e.target.dataset.addon) { addons[e.target.dataset.addon] = e.target.checked; update(); }
+  updateCartSummary();
+}
+
+function populateCartPanel() {
+  const cartPanel = document.getElementById('cartPanel');
+  const cartList = cartPanel.querySelector('#cartList');
+  cartList.innerHTML = "";
+  const entries = Object.entries(cart);
+  if (entries.length === 0) {
+    cartList.innerHTML = "<li>Your cart is empty.</li>";
+    return;
+  }
+  let total = 0;
+  for (const [name, item] of entries) {
+    const li = document.createElement("li");
+    li.className = "cart-item";
+    const itemNameSpan = document.createElement("span");
+    itemNameSpan.textContent = name + ": ";
+    li.appendChild(itemNameSpan);
+    const minusBtn = document.createElement("button");
+    minusBtn.type = "button";
+    minusBtn.textContent = "-";
+    minusBtn.className = "qty-btn minus";
+    minusBtn.setAttribute("aria-label", `Reduce ${name} quantity`);
+    li.appendChild(minusBtn);
+    const qtyInput = document.createElement("input");
+    qtyInput.type = "number";
+    qtyInput.min = 0;
+    qtyInput.max = 10;
+    qtyInput.value = item.qty;
+    qtyInput.className = "qty-input";
+    qtyInput.setAttribute("aria-label", `${name} quantity`);
+    li.appendChild(qtyInput);
+    const plusBtn = document.createElement("button");
+    plusBtn.type = "button";
+    plusBtn.textContent = "+";
+    plusBtn.className = "qty-btn plus";
+    plusBtn.setAttribute("aria-label", `Increase ${name} quantity`);
+    li.appendChild(plusBtn);
+    const priceSpan = document.createElement("span");
+    priceSpan.textContent = ` - ${item.qty * item.price} AED`;
+    priceSpan.className = "cart-item-price";
+    li.appendChild(priceSpan);
+    cartList.appendChild(li);
+    total += item.qty * item.price;
+    minusBtn.addEventListener("click", () => {
+      let newQty = Math.max(0, item.qty - 1);
+      updateCartItem(name, newQty, item.price);
+      populateCartPanel();
+      populateOverviewCart();
+    });
+    plusBtn.addEventListener("click", () => {
+      let newQty = Math.min(10, item.qty + 1);
+      updateCartItem(name, newQty, item.price);
+      populateCartPanel();
+      populateOverviewCart();
+    });
+    qtyInput.addEventListener("input", (e) => {
+      let val = Math.max(0, Math.min(10, parseInt(e.target.value) || 0));
+      updateCartItem(name, val, item.price);
+      populateCartPanel();
+      populateOverviewCart();
+    });
+  }
+  ['extra_garlic_og', 'extra_garlic_zaatar', 'extra_choc_diabetes'].forEach(id => {
+    const chk = document.getElementById(id);
+    if (chk?.checked) {
+      const li = document.createElement("li");
+      const labels = {
+        'extra_garlic_og': "Extra garlic sauce (OG Bunku)",
+        'extra_garlic_zaatar': "Extra garlic sauce (Zaatar Bomb)",
+        'extra_choc_diabetes': "Extra chocolate sauce (Diabetes)"
+      };
+      li.textContent = `${labels[id]}: +5 AED`;
+      cartList.appendChild(li);
+      total += 5;
+    }
   });
-  document.querySelectorAll('input[name="order_type"]').forEach(r => r.addEventListener('change', toggleFields));
-  $('deliveryCity').addEventListener('change', toggleFields);
-  $('bar').addEventListener('click', () => sheet(true));
-  $('cartBtn').addEventListener('click', () => sheet(true));
-  restoreDetails();
-  $('closeSheet').addEventListener('click', () => sheet(false));
-  $('backdrop').addEventListener('click', () => sheet(false));
-  $('lightbox').addEventListener('click', e => { if (e.target.id !== 'lightboxImg') $('lightbox').classList.add('hidden'); });
-  document.addEventListener('keydown', e => { if (e.key === 'Escape') { sheet(false); $('lightbox').classList.add('hidden'); } });
-  $('orderForm').addEventListener('submit', submitOrder);
+  const orderType = document.querySelector('input[name="order_type"]:checked');
+  if (orderType && orderType.value === 'delivery') {
+    const city = document.getElementById('deliveryCity')?.value || "";
+    const deliveryFee = getDeliveryFee(city);
+    if (deliveryFee) {
+      const li = document.createElement("li");
+      li.textContent = `Delivery fee: +${deliveryFee} AED`;
+      cartList.appendChild(li);
+      total += deliveryFee;
+    } else if (city) {
+      const li = document.createElement("li");
+      li.textContent = "Delivery charge estimated on message";
+      cartList.appendChild(li);
+    }
+  }
+  const totalLi = document.createElement("li");
+  totalLi.textContent = `Total: ${total} AED`;
+  totalLi.style.fontWeight = 'bold';
+  cartList.appendChild(totalLi);
+}
 
-  // highlight active section tab
-  const tabs = [...document.querySelectorAll('.tabs a')];
-  const io = new IntersectionObserver(es => es.forEach(en => {
-    if (en.isIntersecting) tabs.forEach(t => t.classList.toggle('on', t.getAttribute('href') === '#' + en.target.id));
-  }), { rootMargin: '-30% 0px -60% 0px' });
-  document.querySelectorAll('.menu section').forEach(s => io.observe(s));
+function populateOverviewCart() {
+  const overviewList = document.getElementById("overviewCartList");
+  overviewList.innerHTML = "";
+  const entries = Object.entries(cart);
+  if (entries.length === 0) {
+    overviewList.innerHTML = "<li>Your cart is empty.</li>";
+    return;
+  }
+  entries.forEach(([name, item]) => {
+    const li = document.createElement("li");
+    li.textContent = `${name}: ${item.qty} box${item.qty !== 1?"es":""} - ${item.qty * item.price} AED`;
+    overviewList.appendChild(li);
+  });
+  let total = Object.values(cart).reduce((sum, item) => sum + (item.qty * item.price), 0);
+  ['extra_garlic_og', 'extra_garlic_zaatar', 'extra_choc_diabetes'].forEach(id => {
+    if(document.getElementById(id)?.checked) total += 5;
+  });
+  const orderType = document.querySelector('input[name="order_type"]:checked');
+  if (orderType && orderType.value === 'delivery') {
+    const city = document.getElementById('deliveryCity')?.value || "";
+    const deliveryFee = getDeliveryFee(city);
+    total += deliveryFee;
+  }
+  const totalLi = document.createElement("li");
+  totalLi.textContent = `Total: ${total} AED`;
+  totalLi.style.fontWeight = "bold";
+  overviewList.appendChild(totalLi);
+}
 
-  toggleFields();
+function isSameDayAllowed(city) {
+  return ["Ajman", "Dubai", "Sharjah"].includes(city);
+}
+
+// Show/hide and disable delivery time field based on city
+function toggleDeliveryTimeField() {
+  const city = document.getElementById('deliveryCity').value;
+  const timeInput = document.getElementById('deliveryTime');
+  const timeMessage = document.getElementById('deliveryTimeMessage');
+  const timeError = document.getElementById('deliveryTimeError');
+
+  if (ALLOWED_TIME_CITIES.includes(city)) {
+    timeInput.disabled = false;
+    timeInput.required = true;
+    timeMessage.classList.add('hidden');
+    timeError.classList.remove('hidden');
+  } else {
+    timeInput.disabled = true;
+    timeInput.required = false;
+    timeInput.value = '';
+    timeMessage.classList.remove('hidden');
+    timeError.classList.add('hidden');
+  }
+}
+
+function showHideOrderFields() {
+  const deliveryFields = document.getElementById('deliveryFields');
+  const pickupFields = document.getElementById('pickupFields');
+  const orderType = document.querySelector('input[name="order_type"]:checked');
+  if (!orderType) {
+    deliveryFields.classList.add('hidden');
+    pickupFields.classList.add('hidden');
+    return;
+  }
+  if (orderType.value === "delivery") {
+    deliveryFields.classList.remove('hidden');
+    pickupFields.classList.add('hidden');
+    toggleDeliveryTimeField();
+  } else if (orderType.value === "pickup") {
+    pickupFields.classList.remove('hidden');
+    deliveryFields.classList.add('hidden');
+  }
+  updateDeliveryChargeInfo();
+}
+
+function updateDeliveryChargeInfo() {
+  const city = document.getElementById('deliveryCity')?.value || "";
+  const fee = getDeliveryFee(city);
+  const info = document.getElementById('deliveryChargeInfo');
+  if (fee) {
+    info.textContent = `Delivery charge: +${fee} AED`;
+  } else if (city) {
+    info.textContent = "Delivery charge estimated on message";
+  } else {
+    info.textContent = "";
+  }
+}
+
+function validateForm() {
+  let valid = true;
+  document.querySelectorAll(".error").forEach(span => span.textContent = "");
+  const orderType = document.querySelector('input[name="order_type"]:checked');
+  if (!orderType) {
+    alert("Please select order type: Delivery or Pick up.");
+    return false;
+  }
+  if (orderType.value === "delivery") {
+    const name = document.getElementById("deliveryName").value.trim();
+    const phone = document.getElementById("deliveryPhone").value.trim();
+    const city = document.getElementById("deliveryCity").value;
+    const date = document.getElementById("deliveryDate").value;
+    const time = document.getElementById("deliveryTime").value;
+    const area = document.getElementById("deliveryArea").value.trim();
+    if (!name) {
+      document.getElementById("deliveryNameError").textContent = "Name required";
+      valid = false;
+    }
+    if (!phone || !/^\d+$/.test(phone)) {
+      document.getElementById("deliveryPhoneError").textContent = "Valid phone required";
+      valid = false;
+    }
+    if (!city) {
+      document.getElementById("deliveryCityError").textContent = "Select city";
+      valid = false;
+    }
+    if (!date) {
+      document.getElementById("deliveryDateError").textContent = "Select date";
+      valid = false;
+    } else {
+      const selectedDate = new Date(date);
+      const today = new Date();
+      today.setHours(0,0,0,0);
+      if (selectedDate < today) {
+        document.getElementById("deliveryDateError").textContent = "Date cannot be in past";
+        valid = false;
+      } else if (selectedDate.getTime() === today.getTime() && !isSameDayAllowed(city)) {
+        document.getElementById("deliveryDateError").textContent = "Same day delivery allowed only in Ajman, Dubai, Sharjah";
+        valid = false;
+      }
+    }
+    if (ALLOWED_TIME_CITIES.includes(city)) {
+      if (!time) {
+        document.getElementById("deliveryTimeError").textContent = "Select time";
+        valid = false;
+      }
+    }
+    if (!area) {
+      document.getElementById("deliveryAreaError").textContent = "Area required";
+      valid = false;
+    }
+  } else if (orderType.value === "pickup") {
+    const name = document.getElementById("pickupName").value.trim();
+    const phone = document.getElementById("pickupPhone").value.trim();
+    const plate = document.getElementById("pickupPlate").value.trim();
+    const date = document.getElementById("pickupDate").value;
+    const time = document.getElementById("pickupTime").value;
+    if (!name) {
+      document.getElementById("pickupNameError").textContent = "Name required";
+      valid = false;
+    }
+    if (!phone || !/^\d+$/.test(phone)) {
+      document.getElementById("pickupPhoneError").textContent = "Valid phone required";
+      valid = false;
+    }
+    if (!plate || !/^[a-zA-Z0-9]+$/.test(plate)) {
+      document.getElementById("pickupPlateError").textContent = "Valid plate number required";
+      valid = false;
+    }
+    if (!date) {
+      document.getElementById("pickupDateError").textContent = "Select date";
+      valid = false;
+    } else {
+      const selectedDate = new Date(date);
+      const today = new Date();
+      today.setHours(0,0,0,0);
+      if (selectedDate < today) {
+        document.getElementById("pickupDateError").textContent = "Date cannot be in past";
+        valid = false;
+      } else if (selectedDate.getTime() === today.getTime() && !isSameDayAllowed("Dubai")) {
+        document.getElementById("pickupDateError").textContent = "Same day pickup allowed only in Ajman, Dubai, Sharjah";
+        valid = false;
+      }
+    }
+    if (!time) {
+      document.getElementById("pickupTimeError").textContent = "Select time";
+      valid = false;
+    }
+  }
+  return valid;
+}
+
+// Real price comes from data-price on the card (the struck-through price is decorative only)
+function getCardPrice(el) {
+  const card = el.closest('.product-card');
+  return Number(card?.dataset.price) || 0;
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.qty-input').forEach(input => {
+    if (input.closest('#cartList')) return;
+    input.addEventListener('input', (e) => {
+      const name = e.target.dataset.name;
+      const qty = Math.max(0, Math.min(10, parseInt(e.target.value) || 0));
+      e.target.value = qty;
+      updateCartItem(name, qty, getCardPrice(e.target));
+      populateCartPanel();
+      populateOverviewCart();
+    });
+  });
+
+  document.querySelectorAll('.product-card .qty-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const name = btn.dataset.name;
+      const input = document.getElementById(`qty_${name.toLowerCase().replace(/ /g, '_')}`);
+      if (!input) return;
+      let qty = parseInt(input.value) || 0;
+      if (btn.classList.contains('plus')) qty = Math.min(qty + 1, 10);
+      if (btn.classList.contains('minus')) qty = Math.max(qty - 1, 0);
+      input.value = qty;
+      updateCartItem(name, qty, getCardPrice(input));
+      populateCartPanel();
+      populateOverviewCart();
+    });
+  });
+
+  // "Add to cart" buttons
+  document.querySelectorAll('.add').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const name = btn.dataset.name;
+      updateCartItem(name, 1, getCardPrice(btn));
+      populateCartPanel();
+      populateOverviewCart();
+    });
+  });
+
+  ['extra_garlic_og', 'extra_garlic_zaatar', 'extra_choc_diabetes'].forEach(id => {
+    const cb = document.getElementById(id);
+    if (cb) cb.addEventListener('change', () => {
+      updateCartSummary();
+      populateCartPanel();
+      populateOverviewCart();
+    });
+  });
+
+  const cartSummary = document.getElementById('cartSummary');
+  const cartPanel = document.getElementById('cartPanel');
+  const closeCartBtn = document.getElementById('closeCartBtn');
+  const checkoutBtn = document.getElementById('checkoutBtn');
+  const orderTypeRadios = document.querySelectorAll('input[name="order_type"]');
+  const deliveryCitySelect = document.getElementById('deliveryCity');
+
+  orderTypeRadios.forEach(radio => {
+    radio.addEventListener('change', () => {
+      showHideOrderFields();
+      populateOverviewCart();
+    });
+  });
+  deliveryCitySelect.addEventListener('change', () => {
+    updateDeliveryChargeInfo();
+    updateCartSummary();
+    toggleDeliveryTimeField();
+  });
+  cartSummary.addEventListener('click', () => {
+    const isVisible = cartPanel.classList.contains('show');
+    if (isVisible) {
+      cartPanel.classList.remove('show');
+      cartPanel.setAttribute('aria-hidden', 'true');
+      cartSummary.focus();
+    } else {
+      populateCartPanel();
+      cartPanel.classList.add('show');
+      cartPanel.setAttribute('aria-hidden', 'false');
+    }
+  });
+  closeCartBtn.addEventListener('click', () => {
+    cartPanel.classList.remove('show');
+    cartPanel.setAttribute('aria-hidden', 'true');
+    cartSummary.focus();
+  });
+
+  // Lightbox logic for product images
+  document.querySelectorAll('.product-img').forEach(img => {
+    img.addEventListener('click', () => {
+      const lightbox = document.getElementById('lightbox');
+      const lightboxImg = document.getElementById('lightboxImg');
+      lightboxImg.src = img.src;
+      lightboxImg.alt = img.alt;
+      lightbox.classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+    });
+  });
+  document.getElementById('lightboxClose').addEventListener('click', () => {
+    document.getElementById('lightbox').classList.add('hidden');
+    document.body.style.overflow = '';
+  });
+  document.getElementById('lightbox').addEventListener('click', (e) => {
+    if (e.target === e.currentTarget) {
+      e.currentTarget.classList.add('hidden');
+      document.body.style.overflow = '';
+    }
+  });
+
+  checkoutBtn.addEventListener('click', (event) => {
+    event.preventDefault();
+    if (Object.values(cart).reduce((a, b) => a + b.qty, 0) < 1) {
+      alert("Your cart is empty. Please add at least one item.");
+      return;
+    }
+    if (!validateForm()) return;
+    let total = 0;
+    let message = `Hello! I placed an order:\n\n`;
+
+    const orderType = document.querySelector('input[name="order_type"]:checked');
+    if (orderType.value === "delivery") {
+      const deliveryName = document.getElementById("deliveryName").value.trim();
+      const deliveryPhone = document.getElementById("deliveryPhone").value.trim();
+      const deliveryCity = document.getElementById("deliveryCity").value;
+      const deliveryDate = document.getElementById("deliveryDate").value;
+      const deliveryTimeInput = document.getElementById("deliveryTime");
+      let deliveryTimeText;
+      if (ALLOWED_TIME_CITIES.includes(deliveryCity)) {
+        deliveryTimeText = deliveryTimeInput.value;
+      } else {
+        deliveryTimeText = "Due to your region, time of delivery is unavailable";
+      }
+      const deliveryArea = document.getElementById("deliveryArea").value.trim();
+      let deliveryCharge = getDeliveryFee(deliveryCity);
+      if (deliveryCharge === 0) deliveryCharge = "Estimated on message";
+      message += "Delivery Details:\n";
+      message += `Name: ${deliveryName}\nPhone: ${deliveryPhone}\nCity: ${deliveryCity}\nDate: ${deliveryDate}\nTime: ${deliveryTimeText}\nArea: ${deliveryArea}\nDelivery Charge: ${deliveryCharge} AED\n\n`;
+    } else if (orderType.value === "pickup") {
+      const pickupName = document.getElementById("pickupName").value.trim();
+      const pickupPhone = document.getElementById("pickupPhone").value.trim();
+      const pickupPlate = document.getElementById("pickupPlate").value.trim();
+      const pickupDate = document.getElementById("pickupDate").value;
+      const pickupTime = document.getElementById("pickupTime").value;
+      message += "Pick Up Details:\n";
+      message += `Name: ${pickupName}\nPhone: ${pickupPhone}\nPlate Number: ${pickupPlate}\nDate: ${pickupDate}\nTime: ${pickupTime}\n\n`;
+    }
+
+    message += "Orders:\n";
+    for (const [name, item] of Object.entries(cart)) {
+      message += `${name}: ${item.qty} box(es)\n`;
+      total += item.qty * item.price;
+    }
+    if (document.getElementById('extra_garlic_og')?.checked) {
+      message += "Extra garlic sauce (OG Bunku): Yes (+5 AED)\n";
+      total += 5;
+    }
+    if (document.getElementById('extra_garlic_zaatar')?.checked) {
+      message += "Extra garlic sauce (Zaatar Bomb): Yes (+5 AED)\n";
+      total += 5;
+    }
+    if (document.getElementById('extra_choc_diabetes')?.checked) {
+      message += "Extra chocolate sauce (Diabetes): Yes (+5 AED)\n";
+      total += 5;
+    }
+    if (orderType.value === "delivery") {
+      const deliveryCity = document.getElementById("deliveryCity").value;
+      let deliveryCharge = getDeliveryFee(deliveryCity);
+      if (typeof deliveryCharge === "number") total += deliveryCharge;
+    }
+    message += `\nTotal: ${total} AED`;
+
+    sendTelegramOrder(message);
+
+    const whatsappUrl = `https://api.whatsapp.com/send?phone=971544588113&text=${encodeURIComponent(message)}`;
+    alert("Order sent! Redirecting to WhatsApp.");
+    window.open(whatsappUrl, "_blank");
+  });
+
+  updateCartSummary();
+  populateCartPanel();
+  populateOverviewCart();
+  showHideOrderFields();
 });
